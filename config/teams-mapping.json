@@ -1,0 +1,275 @@
+{
+  "equipos": {
+    "creativo": {
+      "id": "equipo_creativo",
+      "name": "Equipo Creativo",
+      "role": "Creatividad y Estrategia",
+      "description": "Responsable de estrategia creativa, conceptos y dirección artística",
+      "color": "#667eea",
+      "icon": "🎨",
+      "emails": [
+        "creativo1@zelva.com",
+        "creativo2@zelva.com",
+        "estratega@zelva.com"
+      ],
+      "slack": {
+        "channel": "#equipo-creativo",
+        "mentions": ["@creative-team"],
+        "team_id": "creative-team-slack-id"
+      },
+      "servicios_asignados": [
+        "estrategia_digital",
+        "branding_diseno", 
+        "contenido_copywriting"
+      ],
+      "responsabilidades": [
+        "Desarrollar estrategia creativa integral",
+        "Crear conceptos y mensajes clave",
+        "Diseñar identidad visual del proyecto",
+        "Supervisar consistencia de marca",
+        "Definir tono y personalidad de comunicación"
+      ],
+      "entregables": [
+        "Estrategia creativa documentada",
+        "Brief creativo para equipos",
+        "Conceptos visuales y referencias",
+        "Guidelines de comunicación",
+        "Propuesta de naming si aplica"
+      ],
+      "skills_requeridos": [
+        "estrategia",
+        "creatividad",
+        "branding",
+        "storytelling"
+      ],
+      "horas_promedio_por_proyecto": 40,
+      "disponibilidad": {
+        "lunes": "09:00-18:00",
+        "martes": "09:00-18:00", 
+        "miercoles": "09:00-18:00",
+        "jueves": "09:00-18:00",
+        "viernes": "09:00-17:00"
+      }
+    },
+    "medios": {
+      "id": "equipo_medios",
+      "name": "Equipo de Medios",
+      "role": "Publicidad Pagada y Performance",
+      "description": "Especialistas en campañas pagadas y optimización de performance",
+      "color": "#28a745",
+      "icon": "📊",
+      "emails": [
+        "medios1@zelva.com",
+        "medios2@zelva.com",
+        "sem@zelva.com"
+      ],
+      "slack": {
+        "channel": "#equipo-medios",
+        "mentions": ["@media-team"],
+        "team_id": "media-team-slack-id"
+      },
+      "servicios_asignados": [
+        "publicidad_pagada",
+        "seo_sem",
+        "social_media",
+        "analitica_reporting"
+      ],
+      "responsabilidades": [
+        "Planificar y ejecutar campañas pagadas",
+        "Optimizar performance y métricas clave",
+        "Gestionar presupuestos de medios eficientemente",
+        "Reportar resultados y ROI detallado",
+        "Implementar tracking y analítica avanzada"
+      ],
+      "entregables": [
+        "Plan de medios detallado",
+        "Configuración completa de campañas",
+        "Reportes de performance semanales",
+        "Optimizaciones y mejoras continuas",
+        "Dashboard de métricas en tiempo real"
+      ],
+      "skills_requeridos": [
+        "paid_media",
+        "analitica",
+        "seo_sem",
+        "data_analysis"
+      ],
+      "horas_promedio_por_proyecto": 35,
+      "disponibilidad": {
+        "lunes": "09:00-18:30",
+        "martes": "09:00-18:30",
+        "miercoles": "09:00-18:30", 
+        "jueves": "09:00-18:30",
+        "viernes": "09:00-17:00"
+      }
+    },
+    "diseno": {
+      "id": "equipo_diseno",
+      "name": "Equipo de Diseño",
+      "role": "Diseño Gráfico y Desarrollo",
+      "description": "Diseñadores y desarrolladores para implementación visual y técnica",
+      "color": "#ffc107",
+      "icon": "🎯",
+      "emails": [
+        "diseno1@zelva.com",
+        "diseno2@zelva.com",
+        "dev@zelva.com"
+      ],
+      "slack": {
+        "channel": "#equipo-diseno",
+        "mentions": ["@design-team"],
+        "team_id": "design-team-slack-id"
+      },
+      "servicios_asignados": [
+        "desarrollo_web",
+        "branding_diseno"
+      ],
+      "responsabilidades": [
+        "Diseñar piezas gráficas y digitales de calidad",
+        "Desarrollar landing pages y sitios web",
+        "Crear assets optimizados para campañas",
+        "Mantener consistencia visual en todos los touchpoints",
+        "Implementar responsive design y UX optimizada"
+      ],
+      "entregables": [
+        "Diseños para todas las piezas de campaña",
+        "Landing pages completamente funcionales",
+        "Assets digitales en múltiples formatos",
+        "Mockups y prototipos interactivos",
+        "Guía de implementación técnica"
+      ],
+      "skills_requeridos": [
+        "desarrollo_web",
+        "creatividad",
+        "ui_ux_design",
+        "frontend_development"
+      ],
+      "horas_promedio_por_proyecto": 50,
+      "disponibilidad": {
+        "lunes": "09:00-19:00",
+        "martes": "09:00-19:00",
+        "miercoles": "09:00-19:00",
+        "jueves": "09:00-19:00",
+        "viernes": "09:00-17:00"
+      }
+    },
+    "cuentas": {
+      "id": "account_management",
+      "name": "Account Management",
+      "role": "Gestión de Cuenta y Relación Cliente",
+      "description": "Responsables de la relación con el cliente y coordinación de proyectos",
+      "color": "#dc3545",
+      "icon": "🤝",
+      "emails": [
+        "cuentas@zelva.com",
+        "am1@zelva.com",
+        "pm@zelva.com"
+      ],
+      "slack": {
+        "channel": "#account-management",
+        "mentions": ["@account-team"],
+        "team_id": "account-team-slack-id"
+      },
+      "servicios_asignados": [
+        "all"
+      ],
+      "responsabilidades": [
+        "Gestionar relación estratégica con cliente",
+        "Coordinar entregas y cumplimiento de timelines",
+        "Comunicar avances y resultados de forma proactiva",
+        "Asegurar satisfacción y retención del cliente",
+        "Identificar oportunidades de upselling y cross-selling"
+      ],
+      "entregables": [
+        "Reportes de estado del proyecto",
+        "Comunicación regular con cliente",
+        "Coordinación efectiva entre equipos internos",
+        "Presentaciones ejecutivas de resultados",
+        "Propuestas de mejora y optimización"
+      ],
+      "skills_requeridos": [
+        "account_management",
+        "project_management",
+        "client_relations",
+        "business_development"
+      ],
+      "horas_promedio_por_proyecto": 25,
+      "disponibilidad": {
+        "lunes": "08:30-18:30",
+        "martes": "08:30-18:30",
+        "miercoles": "08:30-18:30",
+        "jueves": "08:30-18:30",
+        "viernes": "08:30-17:00"
+      }
+    }
+  },
+  "mapeo_servicios_a_equipos": {
+    "estrategia_digital": ["creativo"],
+    "branding_diseno": ["creativo", "diseno"],
+    "publicidad_pagada": ["medios"],
+    "contenido_copywriting": ["creativo"],
+    "desarrollo_web": ["diseno"],
+    "social_media": ["medios", "creativo"],
+    "seo_sem": ["medios"],
+    "analitica_reporting": ["medios"]
+  },
+  "configuracion_notificaciones": {
+    "urgencia_alta": {
+      "notificar_inmediatamente": true,
+      "canales_adicionales": ["#urgentes", "#direccion"],
+      "escalation_time_hours": 2
+    },
+    "urgencia_media": {
+      "notificar_inmediatamente": false,
+      "escalation_time_hours": 24
+    },
+    "urgencia_baja": {
+      "notificar_inmediatamente": false,
+      "escalation_time_hours": 72
+    }
+  },
+  "plantillas_timeline": {
+    "proyecto_simple": {
+      "duracion_semanas": 4,
+      "hitos": [
+        {"semana": 1, "descripcion": "Kick-off y brief creativo"},
+        {"semana": 2, "descripcion": "Primera ronda de creatividades"},
+        {"semana": 3, "descripcion": "Ajustes y implementación"},
+        {"semana": 4, "descripcion": "Lanzamiento y optimización"}
+      ]
+    },
+    "proyecto_complejo": {
+      "duracion_semanas": 8,
+      "hitos": [
+        {"semana": 1, "descripcion": "Kick-off y estrategia"},
+        {"semana": 2, "descripcion": "Investigación y conceptualización"},
+        {"semana": 3, "descripcion": "Desarrollo creativo"},
+        {"semana": 4, "descripcion": "Primera revisión cliente"},
+        {"semana": 5, "descripcion": "Ajustes y desarrollo técnico"},
+        {"semana": 6, "descripcion": "Testing y pre-lanzamiento"},
+        {"semana": 7, "descripcion": "Lanzamiento"},
+        {"semana": 8, "descripcion": "Optimización y reporting"}
+      ]
+    }
+  },
+  "contactos_escalation": {
+    "director_creativo": {
+      "name": "Director Creativo",
+      "email": "director.creativo@zelva.com",
+      "slack": "@director-creativo",
+      "phone": "+34 600 000 001"
+    },
+    "director_medios": {
+      "name": "Director de Medios", 
+      "email": "director.medios@zelva.com",
+      "slack": "@director-medios",
+      "phone": "+34 600 000 002"
+    },
+    "ceo": {
+      "name": "CEO",
+      "email": "ceo@zelva.com",
+      "slack": "@ceo",
+      "phone": "+34 600 000 000"
+    }
+  }
+}

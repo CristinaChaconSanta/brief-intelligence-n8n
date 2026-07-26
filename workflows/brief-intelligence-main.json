@@ -1,0 +1,1506 @@
+{
+  "name": "Brief Intelligence System - Main Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "sticky-01",
+      "name": "FASE 1: RECEPCIÓN DE BRIEFS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        200,
+        100
+      ],
+      "settings": {
+        "height": 160,
+        "width": 400
+      },
+      "color": 4,
+      "notes": "📥 FASE 1: RECEPCIÓN DE BRIEFS\n\nEste es el punto de entrada multi-canal del sistema.\nRecibe briefs desde:\n• Telegram (mensajes, PDFs, audios)\n• Gmail (emails con adjuntos)\n\nEl sistema unifica ambas fuentes en un solo flujo."
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "telegram-trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [
+        100,
+        320
+      ],
+      "webhookId": "brief-telegram-webhook",
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot-credentials",
+          "name": "Telegram Bot Brief Intelligence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "subject": "BRIEF"
+        }
+      },
+      "id": "gmail-trigger",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [
+        400,
+        320
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-oauth-credentials",
+          "name": "Gmail Brief Intelligence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "mergeByPosition"
+      },
+      "id": "merge-inputs",
+      "name": "Merge Inputs",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        250,
+        450
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "sticky-02",
+      "name": "FASE 2: PROCESAMIENTO DE INPUT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        650,
+        100
+      ],
+      "settings": {
+        "height": 160,
+        "width": 400
+      },
+      "color": 4,
+      "notes": "🔄 FASE 2: PROCESAMIENTO DE INPUT\n\nIdentifica el tipo de contenido recibido:\n• Audio → Transcribe con Whisper\n• Documento → Extrae texto\n• Texto plano → Usa directo\n\nAñade metadata de origen (telegram/gmail)."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "audio-condition",
+              "leftValue": "={{ $json.voice || $json.audio }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "document-condition",
+              "leftValue": "={{ $json.document || $json.attachments }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "input-type-switch",
+      "name": "Input Type Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        600,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/audio/transcriptions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.openAiApi.apiKey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file",
+              "value": "={{ $json.voice?.file_id || $json.audio?.file_id }}"
+            },
+            {
+              "name": "model",
+              "value": "whisper-1"
+            }
+          ]
+        }
+      },
+      "id": "whisper-transcription",
+      "name": "Whisper Transcription",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        800,
+        350
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-credentials",
+          "name": "OpenAI Brief Intelligence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "extractText"
+      },
+      "id": "extract-text",
+      "name": "Extract Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        800,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Procesar input y añadir metadata\nconst items = $input.all();\n\nfor (const item of items) {\n  // Determinar fuente\n  const source = item.json.chat_id ? 'telegram' : 'gmail';\n  \n  // Extraer texto según tipo\n  let extractedText = '';\n  let originalFiles = [];\n  \n  if (item.json.text) {\n    // Texto directo\n    extractedText = item.json.text;\n  } else if (item.json.transcription) {\n    // Audio transcrito\n    extractedText = item.json.transcription;\n  } else if (item.json.extracted_text) {\n    // Documento procesado\n    extractedText = item.json.extracted_text;\n  } else if (item.json.subject && item.json.textPlain) {\n    // Email de Gmail\n    extractedText = `Asunto: ${item.json.subject}\\n\\n${item.json.textPlain}`;\n    if (item.json.attachments) {\n      originalFiles = item.json.attachments.map(att => att.filename);\n    }\n  }\n  \n  // Añadir metadata\n  item.json.processed_data = {\n    source: source,\n    source_message_id: item.json.message_id || item.json.id,\n    original_text: extractedText,\n    original_files: originalFiles,\n    processed_at: new Date().toISOString(),\n    content_type: item.json.voice || item.json.audio ? 'audio' : \n                  item.json.document || item.json.attachments ? 'document' : 'text'\n  };\n}\n\nreturn items;"
+      },
+      "id": "process-input",
+      "name": "Process Input & Add Metadata",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        950,
+        450
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "sticky-03",
+      "name": "FASE 3: EXTRACCIÓN INTELIGENTE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        100
+      ],
+      "settings": {
+        "height": 180,
+        "width": 400
+      },
+      "color": 5,
+      "notes": "🤖 FASE 3: EXTRACCIÓN INTELIGENTE\n\nLLM extrae información estructurada del brief:\n• Cliente, proyecto, responsable\n• Objetivo, desafío, audiencia\n• Tiempos, presupuesto, entregables\n\nUsa: config/llm-config.json para provider activo\nPrompt: prompts/extractor-prompt.txt\nOutput: JSON según brief-schema.json"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Leer configuración LLM y preparar request\nconst fs = require('fs');\nconst path = require('path');\n\n// Leer configuración LLM\nconst configPath = path.join(__dirname, '../config/llm-config.json');\nconst llmConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));\nconst activeProvider = llmConfig.providers[llmConfig.active_provider];\n\n// Leer prompt de extracción\nconst promptPath = path.join(__dirname, '../prompts/extractor-prompt.txt');\nconst extractorPrompt = fs.readFileSync(promptPath, 'utf8');\n\n// Preparar datos para el request\nconst items = $input.all();\n\nfor (const item of items) {\n  const briefText = item.json.processed_data.original_text;\n  \n  // Configurar request según provider activo\n  if (llmConfig.active_provider === 'gemini') {\n    item.json.llm_request = {\n      url: activeProvider.api_endpoint,\n      method: 'POST',\n      headers: {\n        'Content-Type': 'application/json'\n      },\n      body: {\n        contents: [{\n          parts: [{\n            text: `${extractorPrompt}\\n\\nBrief a analizar:\\n${briefText}`\n          }]\n        }],\n        generationConfig: {\n          temperature: activeProvider.temperature,\n          maxOutputTokens: activeProvider.max_tokens,\n          responseMimeType: \"application/json\"\n        }\n      },\n      auth: {\n        type: 'query',\n        key: 'key',\n        value: process.env[activeProvider.api_key_env]\n      }\n    };\n  } else if (llmConfig.active_provider === 'openai') {\n    item.json.llm_request = {\n      url: activeProvider.api_endpoint,\n      method: 'POST',\n      headers: {\n        'Content-Type': 'application/json',\n        'Authorization': `Bearer ${process.env[activeProvider.api_key_env]}`\n      },\n      body: {\n        model: activeProvider.model,\n        messages: [{\n          role: 'system',\n          content: extractorPrompt\n        }, {\n          role: 'user',\n          content: `Brief a analizar:\\n${briefText}`\n        }],\n        temperature: activeProvider.temperature,\n        max_tokens: activeProvider.max_tokens,\n        response_format: activeProvider.response_format\n      }\n    };\n  }\n  \n  item.json.llm_provider = llmConfig.active_provider;\n}\n\nreturn items;"
+      },
+      "id": "prepare-llm-extraction",
+      "name": "Prepare LLM Extraction",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1150,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.llm_request.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": "={{ Object.entries($json.llm_request.headers).map(([key, value]) => ({ name: key, value })) }}"
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": "={{ $json.llm_request.auth ? [{ name: $json.llm_request.auth.key, value: $json.llm_request.auth.value }] : [] }}"
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{ JSON.stringify($json.llm_request.body) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "llm-extraction-request",
+      "name": "LLM Extraction Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1350,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Procesar respuesta LLM y extraer JSON\nconst items = $input.all();\n\nfor (const item of items) {\n  let extractedData;\n  \n  try {\n    if (item.json.llm_provider === 'gemini') {\n      const response = item.json.candidates[0].content.parts[0].text;\n      extractedData = JSON.parse(response);\n    } else if (item.json.llm_provider === 'openai') {\n      const response = item.json.choices[0].message.content;\n      extractedData = JSON.parse(response);\n    }\n    \n    // Validar que tiene estructura básica requerida\n    if (!extractedData.cliente || !extractedData.proyecto) {\n      throw new Error('Estructura de brief inválida');\n    }\n    \n    item.json.extracted_brief = extractedData;\n    item.json.extraction_success = true;\n    item.json.extraction_timestamp = new Date().toISOString();\n    \n  } catch (error) {\n    item.json.extraction_success = false;\n    item.json.extraction_error = error.message;\n    item.json.raw_response = item.json;\n  }\n}\n\nreturn items;"
+      },
+      "id": "process-extraction-response",
+      "name": "Process Extraction Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1550,
+        450
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "sticky-04",
+      "name": "FASE 4: VALIDACIÓN QA",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1750,
+        100
+      ],
+      "settings": {
+        "height": 180,
+        "width": 400
+      },
+      "color": 5,
+      "notes": "✅ FASE 4: VALIDACIÓN QA\n\nAgente QA valida calidad y completitud:\n• ¿Todos los campos críticos presentes?\n• ¿Fechas coherentes?\n• ¿Presupuesto realista?\n\nSi falla validación → Notifica y detiene flujo.\nSi pasa → Continúa al siguiente paso."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "extraction-success",
+              "leftValue": "={{ $json.extraction_success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "extraction-success-check",
+      "name": "Extraction Success Check",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        1700,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Preparar validación QA\nconst fs = require('fs');\nconst path = require('path');\n\n// Leer configuración LLM\nconst configPath = path.join(__dirname, '../config/llm-config.json');\nconst llmConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));\nconst activeProvider = llmConfig.providers[llmConfig.active_provider];\n\n// Leer prompt de validación\nconst promptPath = path.join(__dirname, '../prompts/validator-prompt.txt');\nconst validatorPrompt = fs.readFileSync(promptPath, 'utf8');\n\nconst items = $input.all();\n\nfor (const item of items) {\n  const extractedBrief = JSON.stringify(item.json.extracted_brief, null, 2);\n  \n  // Configurar request de validación\n  if (llmConfig.active_provider === 'gemini') {\n    item.json.qa_request = {\n      url: activeProvider.api_endpoint,\n      method: 'POST',\n      headers: {\n        'Content-Type': 'application/json'\n      },\n      body: {\n        contents: [{\n          parts: [{\n            text: `${validatorPrompt}\\n\\nBrief extraído para validar:\\n${extractedBrief}`\n          }]\n        }],\n        generationConfig: {\n          temperature: activeProvider.temperature,\n          maxOutputTokens: activeProvider.max_tokens,\n          responseMimeType: \"application/json\"\n        }\n      },\n      auth: {\n        type: 'query',\n        key: 'key',\n        value: process.env[activeProvider.api_key_env]\n      }\n    };\n  } else if (llmConfig.active_provider === 'openai') {\n    item.json.qa_request = {\n      url: activeProvider.api_endpoint,\n      method: 'POST',\n      headers: {\n        'Content-Type': 'application/json',\n        'Authorization': `Bearer ${process.env[activeProvider.api_key_env]}`\n      },\n      body: {\n        model: activeProvider.model,\n        messages: [{\n          role: 'system',\n          content: validatorPrompt\n        }, {\n          role: 'user',\n          content: `Brief extraído para validar:\\n${extractedBrief}`\n        }],\n        temperature: activeProvider.temperature,\n        max_tokens: activeProvider.max_tokens,\n        response_format: activeProvider.response_format\n      }\n    };\n  }\n}\n\nreturn items;"
+      },
+      "id": "prepare-qa-validation",
+      "name": "Prepare QA Validation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.qa_request.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": "={{ Object.entries($json.qa_request.headers).map(([key, value]) => ({ name: key, value })) }}"
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": "={{ $json.qa_request.auth ? [{ name: $json.qa_request.auth.key, value: $json.qa_request.auth.value }] : [] }}"
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{ JSON.stringify($json.qa_request.body) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "qa-validation-request",
+      "name": "QA Validation Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        2100,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Procesar resultado de validación QA\nconst items = $input.all();\n\nfor (const item of items) {\n  let validationResult;\n  \n  try {\n    if (item.json.llm_provider === 'gemini') {\n      const response = item.json.candidates[0].content.parts[0].text;\n      validationResult = JSON.parse(response);\n    } else if (item.json.llm_provider === 'openai') {\n      const response = item.json.choices[0].message.content;\n      validationResult = JSON.parse(response);\n    }\n    \n    item.json.validation_result = validationResult;\n    item.json.validation_timestamp = new Date().toISOString();\n    \n  } catch (error) {\n    item.json.validation_result = {\n      validation_passed: false,\n      confidence_score: 0,\n      blockers: [`Error procesando validación: ${error.message}`]\n    };\n  }\n}\n\nreturn items;"
+      },
+      "id": "process-qa-response",
+      "name": "Process QA Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2300,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "validation-passed",
+              "leftValue": "={{ $json.validation_result.validation_passed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "validation-check",
+      "name": "Validation Check",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        2500,
+        350
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "sticky-05",
+      "name": "FASE 5: ALMACENAMIENTO EN SUPABASE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2700,
+        100
+      ],
+      "settings": {
+        "height": 180,
+        "width": 400
+      },
+      "color": 2,
+      "notes": "💾 FASE 5: ALMACENAMIENTO EN SUPABASE\n\nGuarda brief completo en base de datos:\n• Brief original + extraído\n• Validación y score\n• Estado: 'pendiente_aprobacion'\n• Genera embedding para búsqueda semántica\n\nRetorna: brief_id único"
+    },
+    {
+      "parameters": {
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/briefs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "apikey",
+              "value": "{{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"source\": \"{{ $json.processed_data.source }}\",\n  \"source_message_id\": \"{{ $json.processed_data.source_message_id }}\",\n  \"original_text\": {{ JSON.stringify($json.processed_data.original_text) }},\n  \"original_files\": {{ JSON.stringify($json.processed_data.original_files) }},\n  \"extracted_data\": {{ JSON.stringify($json.extracted_brief) }},\n  \"cliente\": {{ JSON.stringify($json.extracted_brief.cliente?.nombre_empresa) }},\n  \"nombre_proyecto\": {{ JSON.stringify($json.extracted_brief.proyecto?.nombre) }},\n  \"responsable_cliente\": {{ JSON.stringify($json.extracted_brief.cliente?.responsable?.nombre) }},\n  \"email_responsable\": {{ JSON.stringify($json.extracted_brief.cliente?.responsable?.email) }},\n  \"telefono_responsable\": {{ JSON.stringify($json.extracted_brief.cliente?.responsable?.telefono) }},\n  \"objetivo\": {{ JSON.stringify($json.extracted_brief.proyecto?.objetivo_principal) }},\n  \"desafio\": {{ JSON.stringify($json.extracted_brief.proyecto?.desafio_principal) }},\n  \"audiencia_target\": {{ JSON.stringify($json.extracted_brief.audiencia?.target_primario) }},\n  \"servicios_requeridos\": {{ JSON.stringify($json.extracted_brief.servicios_requeridos) }},\n  \"entregables\": {{ JSON.stringify($json.extracted_brief.entregables) }},\n  \"fecha_inicio\": {{ JSON.stringify($json.extracted_brief.timeline?.fecha_inicio_preferida) }},\n  \"fecha_entrega\": {{ JSON.stringify($json.extracted_brief.timeline?.fecha_entrega_final) }},\n  \"presupuesto_estimado\": {{ $json.extracted_brief.presupuesto?.rango_total?.maximo || 'null' }},\n  \"moneda\": {{ JSON.stringify($json.extracted_brief.presupuesto?.rango_total?.moneda || 'EUR') }},\n  \"validation_passed\": {{ $json.validation_result.validation_passed }},\n  \"validation_score\": {{ $json.validation_result.confidence_score }},\n  \"validation_details\": {{ JSON.stringify($json.validation_result) }},\n  \"missing_fields\": {{ JSON.stringify($json.validation_result.missing_fields) }},\n  \"qa_warnings\": {{ JSON.stringify($json.validation_result.warnings) }},\n  \"qa_recommendations\": {{ JSON.stringify($json.validation_result.recommendations) }},\n  \"status\": \"pendiente_aprobacion\",\n  \"llm_provider\": {{ JSON.stringify($json.llm_provider) }},\n  \"processing_duration_ms\": {{ Math.round((new Date() - new Date($json.processed_data.processed_at)) / 1000) }}\n}"
+      },
+      "id": "save-to-supabase",
+      "name": "Save to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        2650,
+        250
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "sticky-06",
+      "name": "FASE 6: GENERACIÓN DE PRESENTACIÓN",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        200,
+        650
+      ],
+      "settings": {
+        "height": 180,
+        "width": 400
+      },
+      "color": 6,
+      "notes": "📊 FASE 6: GENERACIÓN DE PRESENTACIÓN\n\nCrea presentación profesional automáticamente:\n• Google Slides API\n• Template visual de Zelva\n• Rellena con datos extraídos\n• Nombra: [Cliente]_[Proyecto]Brief[Fecha]\n\nOutput: presentation_url (link compartible)"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "presentation",
+        "operation": "create",
+        "title": "={{ $json.extracted_brief.cliente.nombre_empresa }}_{{ $json.extracted_brief.proyecto.nombre }}_Brief_{{ $now.format('YYYYMMDD') }}"
+      },
+      "id": "create-google-slides",
+      "name": "Create Google Slides",
+      "type": "n8n-nodes-base.googleSlides",
+      "typeVersion": 2,
+      "position": [
+        150,
+        900
+      ],
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "google-slides-oauth",
+          "name": "Google Slides Brief Intelligence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "presentation",
+        "operation": "get",
+        "presentationId": "={{ $json.presentationId }}"
+      },
+      "id": "get-presentation-details",
+      "name": "Get Presentation Details",
+      "type": "n8n-nodes-base.googleSlides",
+      "typeVersion": 2,
+      "position": [
+        350,
+        900
+      ],
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "google-slides-oauth",
+          "name": "Google Slides Brief Intelligence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Actualizar Supabase con URL de presentación\nconst items = $input.all();\n\nfor (const item of items) {\n  const presentationUrl = `https://docs.google.com/presentation/d/${item.json.presentationId}/edit`;\n  \n  item.json.update_request = {\n    url: `${process.env.SUPABASE_URL}/rest/v1/briefs?id=eq.${item.json.brief_id}`,\n    method: 'PATCH',\n    headers: {\n      'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,\n      'apikey': process.env.SUPABASE_ANON_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: {\n      presentation_url: presentationUrl,\n      presentation_id: item.json.presentationId\n    }\n  };\n  \n  item.json.presentation_url = presentationUrl;\n}\n\nreturn items;"
+      },
+      "id": "prepare-presentation-update",
+      "name": "Prepare Presentation Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        550,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.update_request.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": "={{ Object.entries($json.update_request.headers).map(([key, value]) => ({ name: key, value })) }}"
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{ JSON.stringify($json.update_request.body) }}"
+      },
+      "id": "update-presentation-url",
+      "name": "Update Presentation URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        750,
+        900
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "sticky-07",
+      "name": "FASE 7: APROBACIÓN HUMANA (PAUSA)",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        650
+      ],
+      "settings": {
+        "height": 200,
+        "width": 400
+      },
+      "color": 3,
+      "notes": "⏸️ FASE 7: APROBACIÓN HUMANA (PAUSA)\n\n⚠️ EL WORKFLOW SE DETIENE AQUÍ ⚠️\n\nEnvía al director/ejecutivo para validar:\n• Email con botones (aprobar/modificar/rechazar)\n• O Slack con botones interactivos\n\nIncluye: resumen, recursos, timeline, brief original\nESPERA decisión humana antes de continuar."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generar token de seguridad y preparar notificación de aprobación\nconst { v4: uuidv4 } = require('uuid');\nconst items = $input.all();\n\nfor (const item of items) {\n  // Generar token de seguridad único\n  const securityToken = uuidv4().replace(/-/g, '');\n  \n  // Preparar datos para template\n  const templateData = {\n    brief_id: item.json.brief_id,\n    security_token: securityToken,\n    cliente: item.json.extracted_brief.cliente,\n    proyecto: item.json.extracted_brief.proyecto,\n    audiencia: item.json.extracted_brief.audiencia,\n    servicios_requeridos: item.json.extracted_brief.servicios_requeridos,\n    timeline: item.json.extracted_brief.timeline,\n    presupuesto: item.json.extracted_brief.presupuesto,\n    validation: item.json.validation_result,\n    presentation_url: item.json.presentation_url,\n    webhook_url: process.env.N8N_WEBHOOK_URL,\n    current_date: new Date().toLocaleDateString('es-ES'),\n    metadata: {\n      urgencia: item.json.extracted_brief.metadata?.urgencia || 'media',\n      urgencia_alta: (item.json.extracted_brief.metadata?.urgencia === 'alta')\n    }\n  };\n  \n  // Guardar token en Supabase para validación posterior\n  item.json.approval_token_request = {\n    url: `${process.env.SUPABASE_URL}/rest/v1/brief_aprobaciones`,\n    method: 'POST',\n    headers: {\n      'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,\n      'apikey': process.env.SUPABASE_ANON_KEY,\n      'Content-Type': 'application/json',\n      'Prefer': 'return=representation'\n    },\n    body: {\n      brief_id: item.json.brief_id,\n      security_token: securityToken,\n      decision: 'pendiente',\n      webhook_source: 'email'\n    }\n  };\n  \n  item.json.template_data = templateData;\n  item.json.security_token = securityToken;\n}\n\nreturn items;"
+      },
+      "id": "prepare-approval-request",
+      "name": "Prepare Approval Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        950,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.approval_token_request.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": "={{ Object.entries($json.approval_token_request.headers).map(([key, value]) => ({ name: key, value })) }}"
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{ JSON.stringify($json.approval_token_request.body) }}"
+      },
+      "id": "save-approval-token",
+      "name": "Save Approval Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1150,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "={{ $env.DIRECTOR_EMAIL }}",
+        "subject": "🎯 Nuevo Brief para Aprobación: {{ $json.extracted_brief.cliente.nombre_empresa }} - {{ $json.extracted_brief.proyecto.nombre }}",
+        "emailType": "html",
+        "message": "={{ $template_html }}",
+        "attachments": "={{ $json.attachments || [] }}",
+        "additionalFields": {
+          "ccList": "{{ $env.COPY_EMAILS || '' }}",
+          "replyTo": "{{ $env.REPLY_TO_EMAIL || 'briefs@zelva.com' }}"
+        }
+      },
+      "id": "send-approval-email",
+      "name": "Send Approval Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        1350,
+        900
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-oauth-sender",
+          "name": "Gmail Sender Brief Intelligence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resumeUrl": "={{ $resumeWebhookUrl }}",
+        "options": {
+          "timeoutHours": 48
+        }
+      },
+      "id": "wait-for-approval",
+      "name": "Wait for Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        1550,
+        900
+      ],
+      "webhookId": "brief-approval-webhook"
+    },
+    {
+      "parameters": {},
+      "id": "sticky-08",
+      "name": "FASE 8: PROCESAMIENTO DE DECISIÓN",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1800,
+        650
+      ],
+      "settings": {
+        "height": 200,
+        "width": 400
+      },
+      "color": 1,
+      "notes": "🔀 FASE 8: PROCESAMIENTO DE DECISIÓN\n\nSegún la decisión del director:\n✅ APROBAR → Crea proyecto en COR + Notifica equipos\n✏️ MODIFICAR → Procesa cambios → Actualiza → Crea proyecto\n❌ RECHAZAR → Archiva y notifica rechazo\n\nCada ruta ejecuta acciones específicas."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "approve-condition",
+              "leftValue": "={{ $json.decision || $json.action }}",
+              "rightValue": "aprobar",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "modify-condition",
+              "leftValue": "={{ $json.decision || $json.action }}",
+              "rightValue": "modificar",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "reject-condition",
+              "leftValue": "={{ $json.decision || $json.action }}",
+              "rightValue": "rechazar",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "decision-switch",
+      "name": "Decision Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        1750,
+        900
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "sticky-09",
+      "name": "FASE 10: CREAR PROYECTO EN COR",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        1200
+      ],
+      "settings": {
+        "height": 180,
+        "width": 400
+      },
+      "color": 2,
+      "notes": "🚀 FASE 10: CREAR PROYECTO EN COR\n\nCrea proyecto completo en COR automáticamente:\n• Estructura de tareas según servicios\n• Asigna equipos correspondientes\n• Establece deadlines\n• Adjunta brief + presentación\n\nUsa: COR API con token de autenticación"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.COR_API_URL }}/projects",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.COR_API_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $json.extracted_brief.cliente.nombre_empresa }} - {{ $json.extracted_brief.proyecto.nombre }}\",\n  \"description\": {{ JSON.stringify($json.extracted_brief.proyecto.objetivo_principal) }},\n  \"client\": {{ JSON.stringify($json.extracted_brief.cliente.nombre_empresa) }},\n  \"client_contact\": {\n    \"name\": {{ JSON.stringify($json.extracted_brief.cliente.responsable.nombre) }},\n    \"email\": {{ JSON.stringify($json.extracted_brief.cliente.responsable.email) }},\n    \"phone\": {{ JSON.stringify($json.extracted_brief.cliente.responsable.telefono) }}\n  },\n  \"start_date\": {{ JSON.stringify($json.extracted_brief.timeline?.fecha_inicio_preferida) }},\n  \"deadline\": {{ JSON.stringify($json.extracted_brief.timeline?.fecha_entrega_final) }},\n  \"budget\": {{ $json.extracted_brief.presupuesto?.rango_total?.maximo || 0 }},\n  \"currency\": {{ JSON.stringify($json.extracted_brief.presupuesto?.rango_total?.moneda || 'EUR') }},\n  \"services\": {{ JSON.stringify($json.extracted_brief.servicios_requeridos) }},\n  \"deliverables\": {{ JSON.stringify($json.extracted_brief.entregables) }},\n  \"target_audience\": {{ JSON.stringify($json.extracted_brief.audiencia) }},\n  \"brand_guidelines\": {{ JSON.stringify($json.extracted_brief.marca) }},\n  \"attachments\": [\n    {\n      \"name\": \"Brief Original\",\n      \"url\": \"{{ $json.brief_document_url }}\",\n      \"type\": \"brief\"\n    },\n    {\n      \"name\": \"Presentación Generada\",\n      \"url\": \"{{ $json.presentation_url }}\",\n      \"type\": \"presentation\"\n    }\n  ],\n  \"metadata\": {\n    \"brief_id\": \"{{ $json.brief_id }}\",\n    \"urgency\": {{ JSON.stringify($json.extracted_brief.metadata?.urgencia || 'media') }},\n    \"complexity\": {{ JSON.stringify($json.validation_result?.estimated_complexity || 'media') }},\n    \"estimated_hours\": {{ $json.validation_result?.estimated_resources?.duration_weeks * 40 || 160 }},\n    \"team_size\": {{ $json.validation_result?.estimated_resources?.team_size || 3 }}\n  }\n}"
+      },
+      "id": "create-cor-project",
+      "name": "Create COR Project",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1950,
+        1450
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/briefs?id=eq.{{ $json.brief_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "apikey",
+              "value": "{{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"status\": \"aprobado\",\n  \"cor_project_id\": \"{{ $json.project_id }}\",\n  \"cor_project_url\": \"{{ $json.project_url }}\",\n  \"equipos_asignados\": {{ JSON.stringify($json.assigned_teams || []) }}\n}"
+      },
+      "id": "update-brief-status-approved",
+      "name": "Update Brief Status - Approved",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        2150,
+        1450
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "sticky-10",
+      "name": "FASE 11: NOTIFICAR A EQUIPOS ASIGNADOS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        1200
+      ],
+      "settings": {
+        "height": 220,
+        "width": 400
+      },
+      "color": 7,
+      "notes": "📧 FASE 11: NOTIFICAR A EQUIPOS ASIGNADOS\n\n⚠️ AQUÍ VAN LOS EMAILS DE ASIGNACIÓN DE TAREAS ⚠️\n\nEnvía notificaciones PERSONALIZADAS a cada equipo:\n• EMAIL: contexto específico del rol\n• SLACK: notifica en canal #proyectos\n\nEnvía a: Creativo, Medios, Diseño, Director de cuenta\nIncluye: rol, timeline, entregables, link a COR"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Identificar equipos asignados y preparar notificaciones\nconst items = $input.all();\n\nfor (const item of items) {\n  const servicios = item.json.extracted_brief.servicios_requeridos;\n  const equiposAsignados = [];\n  const notificaciones = [];\n  \n  // Mapear servicios a equipos\n  const equipoMapping = {\n    'equipo_creativo': {\n      name: 'Equipo Creativo',\n      role: 'Creatividad y Estrategia',\n      emails: process.env.CREATIVE_TEAM_EMAILS?.split(',') || ['creativo@zelva.com'],\n      slack_id: process.env.CREATIVE_TEAM_SLACK_ID || 'creativo-team',\n      channel: '#equipo-creativo',\n      services: ['estrategia_digital', 'branding_diseno', 'contenido_copywriting'],\n      responsibilities: [\n        'Desarrollar estrategia creativa',\n        'Crear conceptos y mensajes clave',\n        'Diseñar identidad visual del proyecto',\n        'Supervisar consistencia de marca'\n      ],\n      deliverables: [\n        'Estrategia creativa',\n        'Brief creativo',\n        'Conceptos visuales',\n        'Guidelines de comunicación'\n      ],\n      skills_needed: ['estrategia', 'creatividad', 'branding']\n    },\n    'equipo_medios': {\n      name: 'Equipo de Medios',\n      role: 'Publicidad Pagada y Performance',\n      emails: process.env.MEDIA_TEAM_EMAILS?.split(',') || ['medios@zelva.com'],\n      slack_id: process.env.MEDIA_TEAM_SLACK_ID || 'medios-team',\n      channel: '#equipo-medios',\n      services: ['publicidad_pagada', 'seo_sem', 'social_media'],\n      responsibilities: [\n        'Planificar y ejecutar campañas pagadas',\n        'Optimizar performance y métricas',\n        'Gestionar presupuestos de medios',\n        'Reportar resultados y ROI'\n      ],\n      deliverables: [\n        'Plan de medios',\n        'Configuración de campañas',\n        'Reportes de performance',\n        'Optimizaciones semanales'\n      ],\n      skills_needed: ['paid_media', 'analitica', 'seo_sem']\n    },\n    'equipo_diseno': {\n      name: 'Equipo de Diseño',\n      role: 'Diseño Gráfico y Desarrollo',\n      emails: process.env.DESIGN_TEAM_EMAILS?.split(',') || ['diseno@zelva.com'],\n      slack_id: process.env.DESIGN_TEAM_SLACK_ID || 'diseno-team',\n      channel: '#equipo-diseno',\n      services: ['desarrollo_web', 'branding_diseno'],\n      responsibilities: [\n        'Diseñar piezas gráficas y digitales',\n        'Desarrollar landing pages y sitios web',\n        'Crear assets para campañas',\n        'Mantener consistencia visual'\n      ],\n      deliverables: [\n        'Diseños para campañas',\n        'Landing pages',\n        'Assets digitales',\n        'Mockups y prototipos'\n      ],\n      skills_needed: ['desarrollo_web', 'creatividad', 'diseno']\n    },\n    'account_management': {\n      name: 'Account Management',\n      role: 'Gestión de Cuenta y Relación Cliente',\n      emails: process.env.ACCOUNT_TEAM_EMAILS?.split(',') || ['cuentas@zelva.com'],\n      slack_id: process.env.ACCOUNT_TEAM_SLACK_ID || 'account-team',\n      channel: '#account-management',\n      services: ['all'], // Siempre asignado\n      responsibilities: [\n        'Gestionar relación con cliente',\n        'Coordinar entregas y timelines',\n        'Comunicar avances y resultados',\n        'Asegurar satisfacción del cliente'\n      ],\n      deliverables: [\n        'Reportes de estado',\n        'Comunicación con cliente',\n        'Coordinación de equipos',\n        'Presentaciones ejecutivas'\n      ],\n      skills_needed: ['account_management', 'project_management']\n    }\n  };\n  \n  // Determinar qué equipos asignar\n  Object.entries(equipoMapping).forEach(([equipoId, equipoInfo]) => {\n    let shouldAssign = false;\n    \n    if (equipoInfo.services.includes('all')) {\n      shouldAssign = true;\n    } else {\n      shouldAssign = equipoInfo.services.some(service => servicios[service] === true);\n    }\n    \n    if (shouldAssign) {\n      equiposAsignados.push(equipoId);\n      \n      // Crear notificación para cada email del equipo\n      equipoInfo.emails.forEach(email => {\n        notificaciones.push({\n          type: 'email',\n          team_id: equipoId,\n          team_name: equipoInfo.name,\n          team_role: equipoInfo.role,\n          email: email,\n          channel: equipoInfo.channel,\n          slack_id: equipoInfo.slack_id,\n          responsibilities: equipoInfo.responsibilities,\n          deliverables: equipoInfo.deliverables,\n          skills_needed: equipoInfo.skills_needed\n        });\n      });\n      \n      // Crear notificación Slack para el equipo\n      notificaciones.push({\n        type: 'slack',\n        team_id: equipoId,\n        team_name: equipoInfo.name,\n        team_role: equipoInfo.role,\n        channel: equipoInfo.channel,\n        slack_id: equipoInfo.slack_id,\n        responsibilities: equipoInfo.responsibilities,\n        deliverables: equipoInfo.deliverables,\n        skills_needed: equipoInfo.skills_needed\n      });\n    }\n  });\n  \n  // Calcular estimaciones específicas por equipo\n  const totalWeeks = item.json.validation_result?.estimated_resources?.duration_weeks || 8;\n  const estimatedHours = Math.round(totalWeeks * 10); // 10h por semana promedio\n  \n  // Preparar datos para templates\n  item.json.team_notifications = notificaciones.map(notif => ({\n    ...notif,\n    ...item.json.template_data, // Incluir todos los datos del brief\n    team: {\n      estimated_hours: estimatedHours,\n      duration_weeks: totalWeeks\n    },\n    timeline: {\n      ...item.json.extracted_brief.timeline,\n      duration_weeks: totalWeeks,\n      team_milestones: [\n        {\n          fecha: item.json.extracted_brief.timeline?.fecha_inicio_preferida,\n          descripcion: 'Kick-off del proyecto'\n        },\n        {\n          fecha: new Date(Date.now() + (totalWeeks * 7 * 24 * 60 * 60 * 1000 / 2)).toISOString().split('T')[0],\n          descripcion: 'Primera revisión y entregables intermedios'\n        },\n        {\n          fecha: item.json.extracted_brief.timeline?.fecha_entrega_final,\n          descripcion: 'Entrega final del proyecto'\n        }\n      ]\n    },\n    account_manager: {\n      name: process.env.DEFAULT_ACCOUNT_MANAGER_NAME || 'Account Manager',\n      email: process.env.DEFAULT_ACCOUNT_MANAGER_EMAIL || 'cuentas@zelva.com',\n      slack_id: process.env.DEFAULT_ACCOUNT_MANAGER_SLACK_ID || 'account-manager'\n    },\n    project_manager: {\n      name: process.env.DEFAULT_PROJECT_MANAGER_NAME || 'Project Manager',\n      email: process.env.DEFAULT_PROJECT_MANAGER_EMAIL || 'proyectos@zelva.com',\n      slack_id: process.env.DEFAULT_PROJECT_MANAGER_SLACK_ID || 'project-manager'\n    },\n    next_steps: [\n      'Revisar el brief completo y la presentación',\n      'Programar kick-off meeting con el equipo',\n      'Acceder al proyecto en COR y familiarizarse',\n      'Contactar con el PM si hay dudas o necesidades específicas'\n    ],\n    cor_project_url: item.json.cor_project_url || `${process.env.COR_BASE_URL}/projects/${item.json.project_id}`,\n    calendar_scheduling_url: process.env.CALENDAR_SCHEDULING_URL || 'https://calendar.zelva.com',\n    slack_channel_url: `${process.env.SLACK_WORKSPACE_URL}/channels/proyecto-${item.json.brief_id}`,\n    urgent_contact_needed: (item.json.extracted_brief.metadata?.urgencia === 'alta')\n  }));\n  \n  item.json.equipos_asignados = equiposAsignados;\n}\n\nreturn items;"
+      },
+      "id": "identify-and-prepare-teams",
+      "name": "Identify & Prepare Teams",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2350,
+        1450
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "team-notifications",
+              "value": "={{ $json.team_notifications }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "split-team-notifications",
+      "name": "Split Team Notifications",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2550,
+        1450
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "email-notification",
+              "leftValue": "={{ $json['team-notifications'].type }}",
+              "rightValue": "email",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "slack-notification",
+              "leftValue": "={{ $json['team-notifications'].type }}",
+              "rightValue": "slack",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "notification-type-switch",
+      "name": "Notification Type Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        2750,
+        1450
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "={{ $json['team-notifications'].email }}",
+        "subject": "🚀 Nuevo Proyecto Asignado: {{ $json['team-notifications'].cliente.nombre_empresa }} - {{ $json['team-notifications'].proyecto.nombre }}",
+        "emailType": "html",
+        "message": "={{ $template_team_html }}",
+        "additionalFields": {
+          "replyTo": "{{ $json['team-notifications'].project_manager.email }}"
+        }
+      },
+      "id": "send-team-email",
+      "name": "Send Team Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        2950,
+        1350
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-oauth-sender",
+          "name": "Gmail Sender Brief Intelligence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "message",
+        "operation": "post",
+        "channel": {
+          "__rl": true,
+          "value": "={{ $json['team-notifications'].channel }}",
+          "mode": "name"
+        },
+        "text": "={{ $json['team-notifications'].slack_message_text }}",
+        "jsonParameters": true,
+        "attachments": "={{ JSON.stringify($json['team-notifications'].slack_blocks) }}"
+      },
+      "id": "send-slack-notification",
+      "name": "Send Slack Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [
+        2950,
+        1550
+      ],
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "slack-oauth-credentials",
+          "name": "Slack Brief Intelligence"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "sticky-11",
+      "name": "RUTA: MODIFICAR - PROCESAR CAMBIOS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        1200
+      ],
+      "settings": {
+        "height": 180,
+        "width": 400
+      },
+      "color": 5,
+      "notes": "🔧 RUTA: MODIFICAR - PROCESAR CAMBIOS\n\nCuando el director solicita cambios:\n• LLM identifica qué modificar\n• Actualiza JSON en Supabase\n• Registra cambios en historial\n• Re-genera presentación actualizada\n• Notifica cambios → Continúa a crear proyecto"
+    },
+    {
+      "parameters": {},
+      "id": "sticky-12",
+      "name": "RUTA: RECHAZAR - MANEJAR RECHAZO",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        1600
+      ],
+      "settings": {
+        "height": 180,
+        "width": 400
+      },
+      "color": 1,
+      "notes": "❌ RUTA: RECHAZAR - MANEJAR RECHAZO\n\nCuando el director rechaza el brief:\n• Guarda rechazo en Supabase\n• Notifica al remitente original\n• Archiva brief con estado 'rechazado'\n• Registra motivo del rechazo\n\nNo se crea proyecto en COR."
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/briefs?id=eq.{{ $json.brief_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "apikey",
+              "value": "{{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"status\": \"rechazado\"\n}"
+      },
+      "id": "update-brief-status-rejected",
+      "name": "Update Brief Status - Rejected",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1800,
+        1800
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/brief_aprobaciones",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "apikey",
+              "value": "{{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"brief_id\": \"{{ $json.brief_id }}\",\n  \"decision\": \"rechazar\",\n  \"approved_by\": \"{{ $json.approved_by || $env.DIRECTOR_EMAIL }}\",\n  \"comentarios\": {{ JSON.stringify($json.comentarios || $json.rejection_reason || 'Brief rechazado') }},\n  \"motivo_rechazo\": {{ JSON.stringify($json.comentarios || $json.rejection_reason || 'No especificado') }},\n  \"security_token\": \"{{ $json.security_token }}\",\n  \"webhook_source\": \"{{ $json.source || 'email' }}\"\n}"
+      },
+      "id": "save-rejection-decision",
+      "name": "Save Rejection Decision",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        2000,
+        1800
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "telegram-source",
+              "leftValue": "={{ $json.processed_data.source }}",
+              "rightValue": "telegram",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "gmail-source",
+              "leftValue": "={{ $json.processed_data.source }}",
+              "rightValue": "gmail",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "source-notification-switch",
+      "name": "Source Notification Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        2200,
+        1800
+      ]
+    }
+  ],
+  "connections": {
+    "telegram-trigger": {
+      "main": [
+        [
+          {
+            "node": "merge-inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gmail-trigger": {
+      "main": [
+        [
+          {
+            "node": "merge-inputs",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "merge-inputs": {
+      "main": [
+        [
+          {
+            "node": "input-type-switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "input-type-switch": {
+      "main": [
+        [
+          {
+            "node": "whisper-transcription",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "extract-text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "process-input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "whisper-transcription": {
+      "main": [
+        [
+          {
+            "node": "process-input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract-text": {
+      "main": [
+        [
+          {
+            "node": "process-input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process-input": {
+      "main": [
+        [
+          {
+            "node": "prepare-llm-extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepare-llm-extraction": {
+      "main": [
+        [
+          {
+            "node": "llm-extraction-request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "llm-extraction-request": {
+      "main": [
+        [
+          {
+            "node": "process-extraction-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process-extraction-response": {
+      "main": [
+        [
+          {
+            "node": "extraction-success-check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extraction-success-check": {
+      "main": [
+        [
+          {
+            "node": "prepare-qa-validation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "prepare-qa-validation": {
+      "main": [
+        [
+          {
+            "node": "qa-validation-request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "qa-validation-request": {
+      "main": [
+        [
+          {
+            "node": "process-qa-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process-qa-response": {
+      "main": [
+        [
+          {
+            "node": "validation-check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validation-check": {
+      "main": [
+        [
+          {
+            "node": "save-to-supabase",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "save-to-supabase": {
+      "main": [
+        [
+          {
+            "node": "create-google-slides",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-google-slides": {
+      "main": [
+        [
+          {
+            "node": "get-presentation-details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-presentation-details": {
+      "main": [
+        [
+          {
+            "node": "prepare-presentation-update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepare-presentation-update": {
+      "main": [
+        [
+          {
+            "node": "update-presentation-url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update-presentation-url": {
+      "main": [
+        [
+          {
+            "node": "prepare-approval-request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepare-approval-request": {
+      "main": [
+        [
+          {
+            "node": "save-approval-token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save-approval-token": {
+      "main": [
+        [
+          {
+            "node": "send-approval-email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send-approval-email": {
+      "main": [
+        [
+          {
+            "node": "wait-for-approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait-for-approval": {
+      "main": [
+        [
+          {
+            "node": "decision-switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "decision-switch": {
+      "main": [
+        [
+          {
+            "node": "create-cor-project",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "update-brief-status-rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-cor-project": {
+      "main": [
+        [
+          {
+            "node": "update-brief-status-approved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update-brief-status-approved": {
+      "main": [
+        [
+          {
+            "node": "identify-and-prepare-teams",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "identify-and-prepare-teams": {
+      "main": [
+        [
+          {
+            "node": "split-team-notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split-team-notifications": {
+      "main": [
+        [
+          {
+            "node": "notification-type-switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "notification-type-switch": {
+      "main": [
+        [
+          {
+            "node": "send-team-email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "send-slack-notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update-brief-status-rejected": {
+      "main": [
+        [
+          {
+            "node": "save-rejection-decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save-rejection-decision": {
+      "main": [
+        [
+          {
+            "node": "source-notification-switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "brief-intelligence-main-workflow",
+  "tags": [
+    "brief-intelligence",
+    "automation",
+    "zelva"
+  ]
+}

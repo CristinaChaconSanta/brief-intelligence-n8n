@@ -1,0 +1,505 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Brief Schema - Zelva Marketing Agency",
+  "description": "Schema completo para briefs de marketing digital procesados por LLM",
+  "type": "object",
+  "properties": {
+    "cliente": {
+      "type": "object",
+      "properties": {
+        "nombre_empresa": {
+          "type": ["string", "null"],
+          "description": "Nombre oficial de la empresa cliente"
+        },
+        "sector_industria": {
+          "type": ["string", "null"],
+          "description": "Sector o industria del cliente",
+          "examples": ["Tecnología", "Salud", "E-commerce", "Fintech", "Educación"]
+        },
+        "responsable": {
+          "type": "object",
+          "properties": {
+            "nombre": {
+              "type": ["string", "null"],
+              "description": "Nombre completo del responsable"
+            },
+            "cargo": {
+              "type": ["string", "null"],
+              "description": "Puesto o cargo en la empresa"
+            },
+            "email": {
+              "type": ["string", "null"],
+              "format": "email",
+              "description": "Email de contacto"
+            },
+            "telefono": {
+              "type": ["string", "null"],
+              "description": "Teléfono de contacto"
+            }
+          },
+          "additionalProperties": false
+        },
+        "contexto_empresa": {
+          "type": ["string", "null"],
+          "description": "Información de contexto sobre la empresa"
+        }
+      },
+      "required": ["nombre_empresa", "responsable"],
+      "additionalProperties": false
+    },
+    "proyecto": {
+      "type": "object",
+      "properties": {
+        "nombre": {
+          "type": ["string", "null"],
+          "description": "Nombre identificativo del proyecto"
+        },
+        "tipo_proyecto": {
+          "type": ["string", "null"],
+          "description": "Categoría del proyecto",
+          "examples": ["Lanzamiento de producto", "Rebranding", "Campaña estacional", "Lead generation"]
+        },
+        "descripcion_breve": {
+          "type": ["string", "null"],
+          "description": "Descripción resumida del proyecto"
+        },
+        "objetivo_principal": {
+          "type": ["string", "null"],
+          "description": "Objetivo principal del proyecto"
+        },
+        "objetivos_secundarios": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Objetivos secundarios o complementarios"
+        },
+        "desafio_principal": {
+          "type": ["string", "null"],
+          "description": "Principal desafío o reto identificado"
+        },
+        "desafios_secundarios": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Desafíos adicionales o secundarios"
+        }
+      },
+      "required": ["objetivo_principal"],
+      "additionalProperties": false
+    },
+    "audiencia": {
+      "type": "object",
+      "properties": {
+        "target_primario": {
+          "type": ["string", "null"],
+          "description": "Audiencia objetivo principal"
+        },
+        "target_secundario": {
+          "type": ["string", "null"],
+          "description": "Audiencia objetivo secundaria"
+        },
+        "edad_rango": {
+          "type": ["string", "null"],
+          "description": "Rango de edad",
+          "pattern": "^\\d{1,2}-\\d{1,2} años$|^\\d{1,2}\\+ años$",
+          "examples": ["25-35 años", "18-24 años", "45+ años"]
+        },
+        "genero": {
+          "type": ["string", "null"],
+          "enum": ["Masculino", "Femenino", "Todos", "No binario", null]
+        },
+        "ubicacion_geografica": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ubicaciones geográficas de interés"
+        },
+        "comportamientos": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Comportamientos característicos de la audiencia"
+        },
+        "intereses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Intereses de la audiencia"
+        },
+        "pain_points": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Puntos de dolor o problemas de la audiencia"
+        }
+      },
+      "additionalProperties": false
+    },
+    "marca": {
+      "type": "object",
+      "properties": {
+        "personalidad_marca": {
+          "type": ["string", "null"],
+          "description": "Personalidad de la marca"
+        },
+        "tono_comunicacion": {
+          "type": ["string", "null"],
+          "description": "Tono de voz en las comunicaciones",
+          "examples": ["Formal", "Casual", "Técnico", "Amigable", "Corporativo"]
+        },
+        "valores_clave": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Valores fundamentales de la marca"
+        },
+        "diferenciadores": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Elementos diferenciadores vs competencia"
+        },
+        "competencia_directa": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Competidores directos identificados"
+        },
+        "posicionamiento_deseado": {
+          "type": ["string", "null"],
+          "description": "Posicionamiento que se quiere lograr"
+        }
+      },
+      "additionalProperties": false
+    },
+    "servicios_requeridos": {
+      "type": "object",
+      "properties": {
+        "estrategia_digital": {
+          "type": "boolean",
+          "description": "Servicios de estrategia digital"
+        },
+        "branding_diseno": {
+          "type": "boolean",
+          "description": "Servicios de branding y diseño"
+        },
+        "publicidad_pagada": {
+          "type": "boolean",
+          "description": "Servicios de publicidad pagada"
+        },
+        "contenido_copywriting": {
+          "type": "boolean",
+          "description": "Servicios de contenido y copywriting"
+        },
+        "desarrollo_web": {
+          "type": "boolean",
+          "description": "Servicios de desarrollo web"
+        },
+        "social_media": {
+          "type": "boolean",
+          "description": "Servicios de social media"
+        },
+        "seo_sem": {
+          "type": "boolean",
+          "description": "Servicios de SEO y SEM"
+        },
+        "analitica_reporting": {
+          "type": "boolean",
+          "description": "Servicios de analítica y reporting"
+        },
+        "otros_servicios": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Otros servicios específicos no categorizados"
+        }
+      },
+      "additionalProperties": false
+    },
+    "entregables": {
+      "type": "object",
+      "properties": {
+        "estrategicos": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Entregables estratégicos",
+          "examples": ["Plan de marketing", "Buyer personas", "Customer journey"]
+        },
+        "creativos": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Entregables creativos",
+          "examples": ["Piezas gráficas", "Videos", "Copy", "Banners"]
+        },
+        "tecnicos": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Entregables técnicos",
+          "examples": ["Landing page", "Setup Analytics", "Pixel tracking"]
+        },
+        "reportes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Reportes y documentación",
+          "examples": ["Reporte mensual", "Dashboard", "Análisis de performance"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "timeline": {
+      "type": "object",
+      "properties": {
+        "fecha_inicio_preferida": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Fecha preferida de inicio del proyecto"
+        },
+        "fecha_entrega_final": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Fecha límite de entrega final"
+        },
+        "hitos_importantes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "descripcion": {
+                "type": "string",
+                "description": "Descripción del hito"
+              },
+              "fecha_estimada": {
+                "type": ["string", "null"],
+                "format": "date",
+                "description": "Fecha estimada del hito"
+              },
+              "criticidad": {
+                "type": "string",
+                "enum": ["alta", "media", "baja"],
+                "description": "Nivel de criticidad del hito"
+              }
+            },
+            "required": ["descripcion", "criticidad"],
+            "additionalProperties": false
+          },
+          "description": "Hitos importantes del proyecto"
+        },
+        "restricciones_temporales": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Restricciones o condicionantes temporales"
+        }
+      },
+      "additionalProperties": false
+    },
+    "presupuesto": {
+      "type": "object",
+      "properties": {
+        "rango_total": {
+          "type": "object",
+          "properties": {
+            "minimo": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Presupuesto mínimo"
+            },
+            "maximo": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Presupuesto máximo"
+            },
+            "moneda": {
+              "type": "string",
+              "enum": ["EUR", "USD", "GBP"],
+              "default": "EUR",
+              "description": "Moneda del presupuesto"
+            }
+          },
+          "required": ["moneda"],
+          "additionalProperties": false
+        },
+        "distribucion_sugerida": {
+          "type": "object",
+          "properties": {
+            "estrategia": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Presupuesto asignado a estrategia"
+            },
+            "creatividad": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Presupuesto asignado a creatividad"
+            },
+            "medios_pagados": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Presupuesto asignado a medios pagados"
+            },
+            "tecnologia": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Presupuesto asignado a tecnología"
+            },
+            "otros": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Presupuesto asignado a otros conceptos"
+            }
+          },
+          "additionalProperties": false
+        },
+        "presupuesto_medios": {
+          "type": "object",
+          "properties": {
+            "mensual": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Presupuesto mensual de medios"
+            },
+            "total_campana": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Presupuesto total de la campaña"
+            }
+          },
+          "additionalProperties": false
+        },
+        "restricciones_presupuestarias": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Restricciones específicas del presupuesto"
+        }
+      },
+      "additionalProperties": false
+    },
+    "requisitos_especiales": {
+      "type": "object",
+      "properties": {
+        "compliance_legal": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Requerimientos legales o de compliance"
+        },
+        "restricciones_creativas": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Restricciones creativas específicas"
+        },
+        "integraciones_tecnicas": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Integraciones técnicas requeridas"
+        },
+        "reportes_especificos": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Reportes específicos solicitados"
+        }
+      },
+      "additionalProperties": false
+    },
+    "contexto_adicional": {
+      "type": "object",
+      "properties": {
+        "campanas_previas": {
+          "type": ["string", "null"],
+          "description": "Información sobre campañas o proyectos anteriores"
+        },
+        "herramientas_actuales": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Herramientas que usa actualmente el cliente"
+        },
+        "equipo_interno": {
+          "type": ["string", "null"],
+          "description": "Información sobre el equipo interno del cliente"
+        },
+        "decisores_clave": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Personas clave en la toma de decisiones"
+        },
+        "proceso_aprobacion": {
+          "type": ["string", "null"],
+          "description": "Descripción del proceso de aprobación del cliente"
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "urgencia": {
+          "type": "string",
+          "enum": ["alta", "media", "baja"],
+          "description": "Nivel de urgencia del proyecto"
+        },
+        "complejidad_estimada": {
+          "type": "string",
+          "enum": ["alta", "media", "baja"],
+          "description": "Complejidad estimada del proyecto"
+        },
+        "recursos_internos_requeridos": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Recursos internos de Zelva requeridos",
+          "examples": ["Estratega senior", "Diseñador", "Developer", "Community manager"]
+        },
+        "riesgos_identificados": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Riesgos identificados en el proyecto"
+        },
+        "oportunidades": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Oportunidades identificadas en el proyecto"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["cliente", "proyecto", "metadata"],
+  "additionalProperties": false
+}

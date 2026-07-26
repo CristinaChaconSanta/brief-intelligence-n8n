@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprobación de Brief - {{cliente.nombre_empresa}}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+        }
+        .content {
+            padding: 30px;
+        }
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            background: #f8f9fa;
+            border-radius: 0 5px 5px 0;
+        }
+        .section h2 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .section p, .section ul {
+            margin: 8px 0;
+            color: #555;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .metric {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+        }
+        .metric h3 {
+            margin: 0 0 10px 0;
+            color: #667eea;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .metric p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .actions {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #dee2e6;
+        }
+        .action-button {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+        .approve {
+            background: #28a745;
+            color: white;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+        .approve:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+        .modify {
+            background: #ffc107;
+            color: #212529;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+        .modify:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+        }
+        .reject {
+            background: #dc3545;
+            color: white;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+        .reject:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+        }
+        .footer {
+            background: #343a40;
+            color: #adb5bd;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .urgent {
+            background: #dc3545;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+        .timeline-date {
+            min-width: 120px;
+            font-weight: 600;
+            color: #667eea;
+        }
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .service-item {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            border-left: 3px solid #28a745;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎯 Nuevo Brief para Aprobación</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">{{cliente.nombre_empresa}} - {{proyecto.nombre}}</p>
+        </div>
+
+        <!-- Urgencia Alert -->
+        {{#if metadata.urgencia_alta}}
+        <div class="urgent">
+            ⚠️ PROYECTO URGENTE - Requiere atención inmediata
+        </div>
+        {{/if}}
+
+        <div class="content">
+            <!-- Resumen Ejecutivo -->
+            <div class="section">
+                <h2>📋 Resumen Ejecutivo</h2>
+                <p><strong>Cliente:</strong> {{cliente.nombre_empresa}} ({{cliente.sector_industria}})</p>
+                <p><strong>Responsable:</strong> {{cliente.responsable.nombre}} - {{cliente.responsable.cargo}}</p>
+                <p><strong>Contacto:</strong> {{cliente.responsable.email}} | {{cliente.responsable.telefono}}</p>
+                <p><strong>Proyecto:</strong> {{proyecto.nombre}}</p>
+                <p><strong>Objetivo:</strong> {{proyecto.objetivo_principal}}</p>
+                {{#if proyecto.desafio_principal}}
+                <p><strong>Desafío Principal:</strong> {{proyecto.desafio_principal}}</p>
+                {{/if}}
+            </div>
+
+            <!-- Métricas Clave -->
+            <div class="metrics">
+                <div class="metric">
+                    <h3>{{presupuesto.rango_total.maximo}}€</h3>
+                    <p>Presupuesto Total</p>
+                </div>
+                <div class="metric">
+                    <h3>{{presupuesto.presupuesto_medios.total_campana}}€</h3>
+                    <p>Inversión Medios</p>
+                </div>
+                <div class="metric">
+                    <h3>{{timeline.duracion_semanas}} sem</h3>
+                    <p>Duración Estimada</p>
+                </div>
+                <div class="metric">
+                    <h3>{{validation.confidence_score_percentage}}%</h3>
+                    <p>Score de Completitud</p>
+                </div>
+            </div>
+
+            <!-- Audiencia Target -->
+            <div class="section">
+                <h2>🎯 Audiencia Objetivo</h2>
+                <p><strong>Target Primario:</strong> {{audiencia.target_primario}}</p>
+                {{#if audiencia.edad_rango}}
+                <p><strong>Edad:</strong> {{audiencia.edad_rango}}</p>
+                {{/if}}
+                {{#if audiencia.ubicacion_geografica}}
+                <p><strong>Ubicación:</strong> {{join audiencia.ubicacion_geografica ", "}}</p>
+                {{/if}}
+                {{#if audiencia.comportamientos}}
+                <p><strong>Comportamientos:</strong> {{join audiencia.comportamientos ", "}}</p>
+                {{/if}}
+            </div>
+
+            <!-- Servicios Requeridos -->
+            <div class="section">
+                <h2>🛠️ Servicios Solicitados</h2>
+                <div class="services-grid">
+                    {{#if servicios_requeridos.estrategia_digital}}
+                    <div class="service-item">✅ Estrategia Digital</div>
+                    {{/if}}
+                    {{#if servicios_requeridos.branding_diseno}}
+                    <div class="service-item">✅ Branding & Diseño</div>
+                    {{/if}}
+                    {{#if servicios_requeridos.publicidad_pagada}}
+                    <div class="service-item">✅ Publicidad Pagada</div>
+                    {{/if}}
+                    {{#if servicios_requeridos.contenido_copywriting}}
+                    <div class="service-item">✅ Contenido & Copy</div>
+                    {{/if}}
+                    {{#if servicios_requeridos.desarrollo_web}}
+                    <div class="service-item">✅ Desarrollo Web</div>
+                    {{/if}}
+                    {{#if servicios_requeridos.social_media}}
+                    <div class="service-item">✅ Social Media</div>
+                    {{/if}}
+                    {{#if servicios_requeridos.seo_sem}}
+                    <div class="service-item">✅ SEO/SEM</div>
+                    {{/if}}
+                    {{#if servicios_requeridos.analitica_reporting}}
+                    <div class="service-item">✅ Analítica & Reporting</div>
+                    {{/if}}
+                </div>
+                {{#if servicios_requeridos.otros_servicios}}
+                <p><strong>Servicios Adicionales:</strong> {{join servicios_requeridos.otros_servicios ", "}}</p>
+                {{/if}}
+            </div>
+
+            <!-- Timeline -->
+            <div class="section">
+                <h2>📅 Timeline del Proyecto</h2>
+                {{#if timeline.fecha_inicio_preferida}}
+                <div class="timeline-item">
+                    <span class="timeline-date">Inicio:</span>
+                    <span>{{format_date timeline.fecha_inicio_preferida}}</span>
+                </div>
+                {{/if}}
+                {{#if timeline.fecha_entrega_final}}
+                <div class="timeline-item">
+                    <span class="timeline-date">Entrega Final:</span>
+                    <span>{{format_date timeline.fecha_entrega_final}}</span>
+                </div>
+                {{/if}}
+                {{#each timeline.hitos_importantes}}
+                <div class="timeline-item">
+                    <span class="timeline-date">{{format_date this.fecha_estimada}}</span>
+                    <span>{{this.descripcion}} <span style="color: {{#if (eq this.criticidad 'alta')}}#dc3545{{else if (eq this.criticidad 'media')}}#ffc107{{else}}#28a745{{/if}};">●</span></span>
+                </div>
+                {{/each}}
+            </div>
+
+            <!-- Distribución Presupuestaria -->
+            {{#if presupuesto.distribucion_sugerida}}
+            <div class="section">
+                <h2>💰 Distribución Presupuestaria</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                    {{#if presupuesto.distribucion_sugerida.estrategia}}
+                    <div style="background: white; padding: 10px; border-radius: 5px; text-align: center;">
+                        <strong>{{presupuesto.distribucion_sugerida.estrategia}}€</strong><br>
+                        <small>Estrategia</small>
+                    </div>
+                    {{/if}}
+                    {{#if presupuesto.distribucion_sugerida.creatividad}}
+                    <div style="background: white; padding: 10px; border-radius: 5px; text-align: center;">
+                        <strong>{{presupuesto.distribucion_sugerida.creatividad}}€</strong><br>
+                        <small>Creatividad</small>
+                    </div>
+                    {{/if}}
+                    {{#if presupuesto.distribucion_sugerida.medios_pagados}}
+                    <div style="background: white; padding: 10px; border-radius: 5px; text-align: center;">
+                        <strong>{{presupuesto.distribucion_sugerida.medios_pagados}}€</strong><br>
+                        <small>Medios Pagados</small>
+                    </div>
+                    {{/if}}
+                    {{#if presupuesto.distribucion_sugerida.tecnologia}}
+                    <div style="background: white; padding: 10px; border-radius: 5px; text-align: center;">
+                        <strong>{{presupuesto.distribucion_sugerida.tecnologia}}€</strong><br>
+                        <small>Tecnología</small>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+            {{/if}}
+
+            <!-- Recursos Estimados -->
+            <div class="section">
+                <h2>👥 Recursos Estimados</h2>
+                <p><strong>Tamaño del Equipo:</strong> {{validation.estimated_resources.team_size}} personas</p>
+                <p><strong>Duración:</strong> {{validation.estimated_resources.duration_weeks}} semanas</p>
+                <p><strong>Skills Requeridos:</strong> {{join validation.estimated_resources.skill_requirements ", "}}</p>
+                <p><strong>Complejidad:</strong> 
+                    <span style="color: {{#if (eq validation.estimated_complexity 'alta')}}#dc3545{{else if (eq validation.estimated_complexity 'media')}}#ffc107{{else}}#28a745{{/if}};">
+                        {{upper validation.estimated_complexity}}
+                    </span>
+                </p>
+            </div>
+
+            <!-- Evaluación de Riesgos -->
+            {{#if validation.risk_assessment}}
+            <div class="section">
+                <h2>⚠️ Evaluación de Riesgos</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                    <div>
+                        <strong>Timeline:</strong> 
+                        <span style="color: {{#if (eq validation.risk_assessment.timeline_risk 'alta')}}#dc3545{{else if (eq validation.risk_assessment.timeline_risk 'media')}}#ffc107{{else}}#28a745{{/if}};">
+                            {{upper validation.risk_assessment.timeline_risk}}
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Presupuesto:</strong> 
+                        <span style="color: {{#if (eq validation.risk_assessment.budget_risk 'alta')}}#dc3545{{else if (eq validation.risk_assessment.budget_risk 'media')}}#ffc107{{else}}#28a745{{/if}};">
+                            {{upper validation.risk_assessment.budget_risk}}
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Scope:</strong> 
+                        <span style="color: {{#if (eq validation.risk_assessment.scope_clarity_risk 'alta')}}#dc3545{{else if (eq validation.risk_assessment.scope_clarity_risk 'media')}}#ffc107{{else}}#28a745{{/if}};">
+                            {{upper validation.risk_assessment.scope_clarity_risk}}
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Cliente:</strong> 
+                        <span style="color: {{#if (eq validation.risk_assessment.client_experience_risk 'alta')}}#dc3545{{else if (eq validation.risk_assessment.client_experience_risk 'media')}}#ffc107{{else}}#28a745{{/if}};">
+                            {{upper validation.risk_assessment.client_experience_risk}}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {{/if}}
+
+            <!-- Recomendaciones QA -->
+            {{#if validation.recommendations}}
+            <div class="highlight">
+                <strong>💡 Recomendaciones del QA Agent:</strong>
+                <ul>
+                    {{#each validation.recommendations}}
+                    <li>{{this}}</li>
+                    {{/each}}
+                </ul>
+            </div>
+            {{/if}}
+
+            <!-- Enlaces de Recursos -->
+            <div class="section">
+                <h2>📎 Recursos</h2>
+                <p>
+                    <a href="{{presentation_url}}" target="_blank" style="color: #667eea;">📊 Ver Presentación Generada</a> |
+                    <a href="{{brief_original_url}}" target="_blank" style="color: #667eea;">📄 Brief Original</a> |
+                    <a href="{{supabase_dashboard_url}}/briefs/{{brief_id}}" target="_blank" style="color: #667eea;">🔍 Ver en Dashboard</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="actions">
+            <h2 style="margin-bottom: 20px; color: #333;">¿Cuál es tu decisión?</h2>
+            
+            <a href="{{webhook_url}}/approve?id={{brief_id}}&token={{security_token}}" class="action-button approve">
+                ✅ Aprobar
+            </a>
+            
+            <a href="{{webhook_url}}/modify?id={{brief_id}}&token={{security_token}}" class="action-button modify">
+                ✏️ Solicitar Cambios
+            </a>
+            
+            <a href="{{webhook_url}}/reject?id={{brief_id}}&token={{security_token}}" class="action-button reject">
+                ❌ Rechazar
+            </a>
+
+            <p style="margin-top: 20px; font-size: 14px; color: #666;">
+                💡 <strong>Tip:</strong> Si necesitas más información, puedes responder directamente a este email.
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                Brief Intelligence System | Generado automáticamente el {{current_date}}<br>
+                <a href="mailto:soporte@zelva.com">Soporte Técnico</a> | 
+                <a href="{{dashboard_url}}">Dashboard</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

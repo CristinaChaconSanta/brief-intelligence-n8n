@@ -1,0 +1,317 @@
+{
+  "text": "🚀 Nuevo Proyecto Asignado: {{cliente.nombre_empresa}} - {{proyecto.nombre}}",
+  "channel": "{{team_channel}}",
+  "username": "Brief Intelligence Bot",
+  "icon_emoji": ":rocket:",
+  "blocks": [
+    {
+      "type": "header",
+      "text": {
+        "type": "plain_text",
+        "text": "🚀 Nuevo Proyecto Asignado",
+        "emoji": true
+      }
+    },
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "*Cliente:*\n{{cliente.nombre_empresa}}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Proyecto:*\n{{proyecto.nombre}}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Equipo Asignado:*\n{{team_name}}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Rol:*\n{{team_role}}"
+        }
+      ]
+    },
+    {{#if (eq metadata.urgencia 'alta')}}
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": ":fire: *PROYECTO ALTA PRIORIDAD* - Atención inmediata requerida"
+      },
+      "accessory": {
+        "type": "button",
+        "text": {
+          "type": "plain_text",
+          "text": "🔥 URGENTE",
+          "emoji": true
+        },
+        "style": "danger",
+        "action_id": "urgent_project"
+      }
+    },
+    {{else if (eq metadata.urgencia 'media')}}
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": ":zap: *PRIORIDAD MEDIA* - Planificar en timeline próximo"
+      },
+      "accessory": {
+        "type": "button",
+        "text": {
+          "type": "plain_text",
+          "text": "⚡ MEDIA",
+          "emoji": true
+        },
+        "style": "primary",
+        "action_id": "medium_priority"
+      }
+    },
+    {{/if}}
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*🎯 Objetivo del Proyecto:*\n{{proyecto.objetivo_principal}}"
+      }
+    },
+    {{#if proyecto.desafio_principal}}
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*⚡ Desafío Principal:*\n{{proyecto.desafio_principal}}"
+      }
+    },
+    {{/if}}
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "*⏰ Duración:*\n{{timeline.duration_weeks}} semanas"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*🕐 Horas Estimadas:*\n{{team.estimated_hours}}h"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*📅 Deadline:*\n{{format_date timeline.fecha_entrega_final}}"
+        },
+        {{#if presupuesto.team_allocation}}
+        {
+          "type": "mrkdwn",
+          "text": "*💰 Presupuesto Equipo:*\n{{presupuesto.team_allocation}}€"
+        }
+        {{/if}}
+      ]
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*🎯 Tu Rol en Este Proyecto:*"
+      }
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Responsabilidades:*\n{{#each team_responsibilities}}• {{this}}\n{{/each}}"
+      }
+    },
+    {{#if team_deliverables}}
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Entregables Esperados:*\n{{#each team_deliverables}}• {{this}}\n{{/each}}"
+      }
+    },
+    {{/if}}
+    {{#if team_skills_needed}}
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Skills Específicos:*\n{{join team_skills_needed \", \"}}"
+      }
+    },
+    {{/if}}
+    {
+      "type": "divider"
+    },
+    {{#if audiencia.target_primario}}
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*🎯 Audiencia Objetivo:*\n{{audiencia.target_primario}}{{#if audiencia.edad_rango}} ({{audiencia.edad_rango}}){{/if}}{{#if audiencia.ubicacion_geografica}}\n📍 {{join audiencia.ubicacion_geografica \", \"}}{{/if}}"
+      }
+    },
+    {{/if}}
+    {{#if marca.tono_comunicacion}}
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*🎨 Tono de Marca:*\n{{marca.tono_comunicacion}}{{#if marca.valores_clave}}\n*Valores:* {{join marca.valores_clave \", \"}}{{/if}}"
+      }
+    },
+    {{/if}}
+    {{#if timeline.team_milestones}}
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*📅 Timeline Específico:*\n{{#each timeline.team_milestones}}• {{format_date this.fecha}}: {{this.descripcion}}\n{{/each}}"
+      }
+    },
+    {{/if}}
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*📞 Contactos del Proyecto:*\n• *Cliente:* {{cliente.responsable.nombre}} - {{cliente.responsable.email}}\n• *Account Manager:* {{account_manager.name}} - <@{{account_manager.slack_id}}>\n• *Project Manager:* {{project_manager.name}} - <@{{project_manager.slack_id}}>"
+      }
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*📝 Próximos Pasos:*\n{{#each next_steps}}{{@index}}.{{this}}\n{{/each}}"
+      }
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*📎 Recursos del Proyecto:*"
+      },
+      "accessory": {
+        "type": "overflow",
+        "options": [
+          {
+            "text": {
+              "type": "plain_text",
+              "text": "📊 Proyecto en COR",
+              "emoji": true
+            },
+            "url": "{{cor_project_url}}"
+          },
+          {
+            "text": {
+              "type": "plain_text",
+              "text": "📈 Presentación Brief",
+              "emoji": true
+            },
+            "url": "{{presentation_url}}"
+          },
+          {
+            "text": {
+              "type": "plain_text",
+              "text": "📄 Brief Original",
+              "emoji": true
+            },
+            "url": "{{brief_document_url}}"
+          }
+          {{#if brand_assets_url}},
+          {
+            "text": {
+              "type": "plain_text",
+              "text": "🎨 Assets de Marca",
+              "emoji": true
+            },
+            "url": "{{brand_assets_url}}"
+          }
+          {{/if}}
+        ],
+        "action_id": "project_resources"
+      }
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "📊 Ver en COR",
+            "emoji": true
+          },
+          "style": "primary",
+          "action_id": "open_cor",
+          "url": "{{cor_project_url}}"
+        },
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "📅 Programar Kick-off",
+            "emoji": true
+          },
+          "action_id": "schedule_kickoff",
+          "url": "{{calendar_scheduling_url}}"
+        },
+        {{#if slack_channel_url}}
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "💬 Canal del Proyecto",
+            "emoji": true
+          },
+          "action_id": "join_channel",
+          "url": "{{slack_channel_url}}"
+        }
+        {{/if}}
+      ]
+    },
+    {{#if urgent_contact_needed}}
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": ":warning: *Coordinación Inmediata Requerida*\nContacta con <@{{project_manager.slack_id}}> lo antes posible."
+      },
+      "accessory": {
+        "type": "button",
+        "text": {
+          "type": "plain_text",
+          "text": "💬 Contactar PM",
+          "emoji": true
+        },
+        "style": "danger",
+        "action_id": "contact_pm"
+      }
+    },
+    {{/if}}
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "mrkdwn",
+          "text": "Proyecto ID: `{{cor_project_id}}` | Brief ID: `{{brief_id}}` | Asignado: {{current_date}}"
+        }
+      ]
+    }
+  ],
+  "unfurl_links": false,
+  "unfurl_media": false,
+  "thread_ts": "{{thread_timestamp}}"
+}

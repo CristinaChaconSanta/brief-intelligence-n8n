@@ -1,0 +1,36 @@
+{
+  "project_url": "https://your-project-id.supabase.co",
+  "anon_key": "your-anon-key-here",
+  "service_role_key": "your-service-role-key-here",
+  "database": {
+    "host": "db.your-project-id.supabase.co",
+    "port": 5432,
+    "database": "postgres",
+    "username": "postgres",
+    "password": "your-db-password"
+  },
+  "storage": {
+    "bucket_name": "brief-attachments",
+    "max_file_size_mb": 50,
+    "allowed_file_types": [".pdf", ".doc", ".docx", ".txt", ".mp3", ".wav", ".ogg", ".m4a", ".jpg", ".png", ".jpeg"]
+  },
+  "rls_policies": {
+    "enabled": true,
+    "public_read": false,
+    "authenticated_full_access": true
+  },
+  "functions": {
+    "generate_embeddings": {
+      "name": "generate-embeddings",
+      "url": "https://your-project-id.functions.supabase.co/generate-embeddings"
+    },
+    "search_briefs": {
+      "name": "search-briefs",
+      "url": "https://your-project-id.functions.supabase.co/search-briefs"
+    }
+  },
+  "webhooks": {
+    "brief_status_change": "https://your-n8n-instance.com/webhook/brief-status-change",
+    "approval_received": "https://your-n8n-instance.com/webhook/approval-received"
+  }
+}

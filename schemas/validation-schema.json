@@ -1,0 +1,222 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Validation Result Schema",
+  "description": "Schema para resultados de validación QA de briefs",
+  "type": "object",
+  "properties": {
+    "validation_passed": {
+      "type": "boolean",
+      "description": "Indica si el brief pasó la validación QA"
+    },
+    "confidence_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Score de confianza de 0.0 a 1.0"
+    },
+    "quality_assessment": {
+      "type": "object",
+      "properties": {
+        "campos_criticos": {
+          "type": "object",
+          "properties": {
+            "presentes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Campos críticos que están presentes"
+            },
+            "ausentes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Campos críticos que están ausentes"
+            },
+            "score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Score específico para campos críticos"
+            }
+          },
+          "required": ["presentes", "ausentes", "score"],
+          "additionalProperties": false
+        },
+        "campos_importantes": {
+          "type": "object",
+          "properties": {
+            "presentes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Campos importantes que están presentes"
+            },
+            "ausentes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Campos importantes que están ausentes"
+            },
+            "score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Score específico para campos importantes"
+            }
+          },
+          "required": ["presentes", "ausentes", "score"],
+          "additionalProperties": false
+        },
+        "campos_opcionales": {
+          "type": "object",
+          "properties": {
+            "presentes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Campos opcionales que están presentes"
+            },
+            "ausentes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Campos opcionales que están ausentes"
+            },
+            "score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Score específico para campos opcionales"
+            }
+          },
+          "required": ["presentes", "ausentes", "score"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["campos_criticos", "campos_importantes", "campos_opcionales"],
+      "additionalProperties": false
+    },
+    "missing_fields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Lista de campos faltantes importantes"
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Advertencias sobre posibles problemas"
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Recomendaciones para mejorar el brief"
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Bloqueadores que impiden continuar"
+    },
+    "estimated_complexity": {
+      "type": "string",
+      "enum": ["alta", "media", "baja"],
+      "description": "Complejidad estimada del proyecto"
+    },
+    "estimated_resources": {
+      "type": "object",
+      "properties": {
+        "team_size": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Tamaño estimado del equipo necesario"
+        },
+        "duration_weeks": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Duración estimada en semanas"
+        },
+        "skill_requirements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "estrategia",
+              "creatividad", 
+              "paid_media",
+              "desarrollo_web",
+              "social_media",
+              "seo_sem",
+              "analitica",
+              "project_management",
+              "account_management"
+            ]
+          },
+          "description": "Habilidades específicas requeridas"
+        }
+      },
+      "required": ["team_size", "duration_weeks", "skill_requirements"],
+      "additionalProperties": false
+    },
+    "risk_assessment": {
+      "type": "object",
+      "properties": {
+        "timeline_risk": {
+          "type": "string",
+          "enum": ["alta", "media", "baja"],
+          "description": "Riesgo relacionado con el timeline"
+        },
+        "budget_risk": {
+          "type": "string",
+          "enum": ["alta", "media", "baja"],
+          "description": "Riesgo relacionado con el presupuesto"
+        },
+        "scope_clarity_risk": {
+          "type": "string",
+          "enum": ["alta", "media", "baja"],
+          "description": "Riesgo por falta de claridad en el scope"
+        },
+        "client_experience_risk": {
+          "type": "string",
+          "enum": ["alta", "media", "baja"],
+          "description": "Riesgo basado en experiencia con el cliente"
+        }
+      },
+      "required": ["timeline_risk", "budget_risk", "scope_clarity_risk", "client_experience_risk"],
+      "additionalProperties": false
+    },
+    "next_actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Acciones recomendadas para continuar"
+    }
+  },
+  "required": [
+    "validation_passed",
+    "confidence_score", 
+    "quality_assessment",
+    "missing_fields",
+    "warnings",
+    "recommendations",
+    "blockers",
+    "estimated_complexity",
+    "estimated_resources",
+    "risk_assessment",
+    "next_actions"
+  ],
+  "additionalProperties": false
+}

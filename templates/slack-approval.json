@@ -1,0 +1,222 @@
+{
+  "text": "🎯 Nuevo Brief para Aprobación: {{cliente.nombre_empresa}} - {{proyecto.nombre}}",
+  "channel": "{{approval_channel}}",
+  "username": "Brief Intelligence Bot",
+  "icon_emoji": ":clipboard:",
+  "blocks": [
+    {
+      "type": "header",
+      "text": {
+        "type": "plain_text",
+        "text": "🎯 Nuevo Brief para Aprobación",
+        "emoji": true
+      }
+    },
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "*Cliente:*\n{{cliente.nombre_empresa}}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Proyecto:*\n{{proyecto.nombre}}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Responsable:*\n{{cliente.responsable.nombre}}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Sector:*\n{{cliente.sector_industria}}"
+        }
+      ]
+    },
+    {{#if metadata.urgencia_alta}}
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": ":warning: *PROYECTO URGENTE* - Requiere atención inmediata"
+      },
+      "accessory": {
+        "type": "button",
+        "text": {
+          "type": "plain_text",
+          "text": "🔥 URGENTE",
+          "emoji": true
+        },
+        "style": "danger",
+        "action_id": "urgent_flag"
+      }
+    },
+    {{/if}}
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*🎯 Objetivo:*\n{{proyecto.objetivo_principal}}"
+      }
+    },
+    {{#if proyecto.desafio_principal}}
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*⚡ Desafío Principal:*\n{{proyecto.desafio_principal}}"
+      }
+    },
+    {{/if}}
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "*💰 Presupuesto Total:*\n{{presupuesto.rango_total.maximo}}€"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*📊 Inversión Medios:*\n{{presupuesto.presupuesto_medios.total_campana}}€"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*⏰ Duración:*\n{{timeline.duracion_semanas}} semanas"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*✅ Score QA:*\n{{validation.confidence_score_percentage}}%"
+        }
+      ]
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*🛠️ Servicios Solicitados:*\n{{#servicios_requeridos_list}}{{#if this.enabled}}• {{this.name}}\n{{/if}}{{/servicios_requeridos_list}}"
+      }
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*🎯 Audiencia:*\n{{audiencia.target_primario}}{{#if audiencia.edad_rango}} ({{audiencia.edad_rango}}){{/if}}{{#if audiencia.ubicacion_geografica}}\n📍 {{join audiencia.ubicacion_geografica \", \"}}{{/if}}"
+      }
+    },
+    {{#if timeline.fecha_entrega_final}}
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*📅 Timeline:*\n{{#if timeline.fecha_inicio_preferida}}🏁 Inicio: {{format_date timeline.fecha_inicio_preferida}}\n{{/if}}🎯 Entrega: {{format_date timeline.fecha_entrega_final}}"
+      }
+    },
+    {{/if}}
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*👥 Recursos Estimados:*\n• Equipo: {{validation.estimated_resources.team_size}} personas\n• Duración: {{validation.estimated_resources.duration_weeks}} semanas\n• Complejidad: {{upper validation.estimated_complexity}}"
+      }
+    },
+    {{#if validation.risk_assessment}}
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*⚠️ Evaluación de Riesgos:*\n• Timeline: {{risk_emoji validation.risk_assessment.timeline_risk}} {{upper validation.risk_assessment.timeline_risk}}\n• Presupuesto: {{risk_emoji validation.risk_assessment.budget_risk}} {{upper validation.risk_assessment.budget_risk}}\n• Scope: {{risk_emoji validation.risk_assessment.scope_clarity_risk}} {{upper validation.risk_assessment.scope_clarity_risk}}\n• Cliente: {{risk_emoji validation.risk_assessment.client_experience_risk}} {{upper validation.risk_assessment.client_experience_risk}}"
+      }
+    },
+    {{/if}}
+    {{#if validation.recommendations}}
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*💡 Recomendaciones QA:*\n{{#each validation.recommendations}}• {{this}}\n{{/each}}"
+      }
+    },
+    {{/if}}
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*📎 Recursos:*\n<{{presentation_url}}|📊 Presentación> | <{{brief_original_url}}|📄 Brief Original> | <{{supabase_dashboard_url}}/briefs/{{brief_id}}|🔍 Dashboard>"
+      }
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*¿Cuál es tu decisión?*"
+      }
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "✅ Aprobar",
+            "emoji": true
+          },
+          "style": "primary",
+          "value": "approve",
+          "action_id": "brief_approve",
+          "url": "{{webhook_url}}/approve?id={{brief_id}}&token={{security_token}}"
+        },
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "✏️ Solicitar Cambios",
+            "emoji": true
+          },
+          "style": "danger",
+          "value": "modify",
+          "action_id": "brief_modify",
+          "url": "{{webhook_url}}/modify?id={{brief_id}}&token={{security_token}}"
+        },
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "❌ Rechazar",
+            "emoji": true
+          },
+          "style": "danger",
+          "value": "reject",
+          "action_id": "brief_reject",
+          "url": "{{webhook_url}}/reject?id={{brief_id}}&token={{security_token}}"
+        }
+      ]
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "mrkdwn",
+          "text": "Brief ID: `{{brief_id}}` | Generado: {{current_date}} | <{{dashboard_url}}|Dashboard> | <mailto:soporte@zelva.com|Soporte>"
+        }
+      ]
+    }
+  ],
+  "unfurl_links": false,
+  "unfurl_media": false
+}

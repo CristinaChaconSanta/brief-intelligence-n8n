@@ -1,0 +1,128 @@
+{
+  "telegram": {
+    "bot_token_env": "TELEGRAM_BOT_TOKEN",
+    "webhook_url": "https://your-n8n-instance.com/webhook/telegram-brief",
+    "allowed_chats": [
+      "your-chat-id-1",
+      "your-chat-id-2"
+    ],
+    "commands": {
+      "/brief": "Enviar nuevo brief",
+      "/status": "Consultar estado de briefs",
+      "/help": "Ayuda del bot"
+    }
+  },
+  "gmail": {
+    "oauth2": {
+      "client_id_env": "GMAIL_CLIENT_ID",
+      "client_secret_env": "GMAIL_CLIENT_SECRET",
+      "refresh_token_env": "GMAIL_REFRESH_TOKEN"
+    },
+    "polling_interval_minutes": 1,
+    "filters": {
+      "subject_keywords": ["BRIEF", "Brief", "brief"],
+      "from_whitelist": [
+        "@zelva.com",
+        "@client-domain.com"
+      ]
+    }
+  },
+  "google_slides": {
+    "oauth2": {
+      "client_id_env": "GOOGLE_CLIENT_ID",
+      "client_secret_env": "GOOGLE_CLIENT_SECRET",
+      "refresh_token_env": "GOOGLE_REFRESH_TOKEN"
+    },
+    "template_id": "your-google-slides-template-id",
+    "default_sharing": {
+      "type": "anyone",
+      "role": "reader"
+    }
+  },
+  "slack": {
+    "oauth2": {
+      "client_id_env": "SLACK_CLIENT_ID",
+      "client_secret_env": "SLACK_CLIENT_SECRET",
+      "bot_token_env": "SLACK_BOT_TOKEN"
+    },
+    "channels": {
+      "approvals": "#brief-approvals",
+      "projects": "#proyectos",
+      "creative": "#equipo-creativo",
+      "media": "#equipo-medios",
+      "design": "#equipo-diseno",
+      "account": "#account-management"
+    },
+    "workspace_url": "https://zelva.slack.com"
+  },
+  "cor": {
+    "api_url": "https://your-cor-instance.com/api",
+    "api_token_env": "COR_API_TOKEN",
+    "base_url": "https://your-cor-instance.com",
+    "default_project_template": "marketing-project-template",
+    "team_mapping": {
+      "creativo": "creative-team-id",
+      "medios": "media-team-id",
+      "diseno": "design-team-id",
+      "cuentas": "account-team-id"
+    }
+  },
+  "openai": {
+    "api_key_env": "OPENAI_API_KEY",
+    "models": {
+      "whisper": "whisper-1",
+      "chat": "gpt-4o",
+      "embeddings": "text-embedding-3-small"
+    },
+    "endpoints": {
+      "chat": "https://api.openai.com/v1/chat/completions",
+      "whisper": "https://api.openai.com/v1/audio/transcriptions",
+      "embeddings": "https://api.openai.com/v1/embeddings"
+    }
+  },
+  "gemini": {
+    "api_key_env": "GEMINI_API_KEY",
+    "models": {
+      "chat": "gemini-1.5-pro",
+      "embeddings": "text-embedding-004"
+    },
+    "endpoints": {
+      "chat": "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent",
+      "embeddings": "https://generativelanguage.googleapis.com/v1/models/text-embedding-004:embedContent"
+    }
+  },
+  "n8n": {
+    "instance_url": "https://your-n8n-instance.com",
+    "webhook_base_url": "https://your-n8n-instance.com/webhook",
+    "webhooks": {
+      "telegram": "brief-telegram",
+      "gmail": "brief-gmail",
+      "approval": "brief-approval",
+      "status_change": "brief-status-change"
+    }
+  },
+  "zelva": {
+    "domain": "zelva.com",
+    "emails": {
+      "director": "director@zelva.com",
+      "projects": "proyectos@zelva.com",
+      "support": "soporte@zelva.com",
+      "briefs": "briefs@zelva.com",
+      "noreply": "noreply@zelva.com"
+    },
+    "calendar": {
+      "scheduling_url": "https://calendar.zelva.com",
+      "default_meeting_duration": 60
+    },
+    "brand": {
+      "colors": {
+        "primary": "#667eea",
+        "secondary": "#764ba2",
+        "success": "#28a745",
+        "warning": "#ffc107",
+        "danger": "#dc3545"
+      },
+      "logo_url": "https://zelva.com/assets/logo.png"
+    }
+  }
+}

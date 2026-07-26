@@ -1,0 +1,23 @@
+{
+  "name": "brief-intelligence-validator",
+  "version": "1.0.0",
+  "description": "Script de validación para Brief Intelligence System",
+  "main": "validate-setup.js",
+  "scripts": {
+    "validate": "node validate-setup.js",
+    "test": "npm run validate"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0",
+    "dotenv": "^16.3.1"
+  },
+  "keywords": [
+    "brief-intelligence",
+    "validation",
+    "setup",
+    "n8n",
+    "automation"
+  ],
+  "author": "Zelva Team",
+  "license": "MIT"
+}
